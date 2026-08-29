@@ -28,6 +28,7 @@ import 'features/products/domain/repositories/product_repository.dart';
 import 'features/products/data/repositories/product_repository_impl.dart';
 import 'features/products/bloc/product_bloc.dart';
 import 'features/products/bloc/product_event.dart';
+import 'core/firebase/firestore_seeder.dart';
 import 'core/constants/app_strings.dart';
 
 void main() async {
@@ -37,6 +38,8 @@ void main() async {
   
   try {
     await core_firebase.FirebaseService.instance.initialize();
+    // Ensure all collections in project aurajewelry-2d68d are live in Firestore
+    FirestoreSeeder.seedInitialDataIfEmpty();
   } catch (e) {
     debugPrint("Firebase initialization skipped or failed: $e");
   }
