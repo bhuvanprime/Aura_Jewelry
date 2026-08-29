@@ -43,27 +43,28 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
   }
 
   Future<void> _onLoadAllData(AdminEvent event, Emitter<AdminState> emit) async {
-    emit(const AdminLoading(message: 'Loading Royal Catalog & Operations...'));
     try {
-      final products = await _adminRepository.fetchProducts();
-      final categories = await _adminRepository.fetchCategories();
-      final offers = await _adminRepository.fetchOffers();
-      final combos = await _adminRepository.fetchCombos();
-      final orders = await _adminRepository.fetchOrders();
-      final goldRates = await _adminRepository.fetchGoldRates();
-      final analytics = await _adminRepository.fetchAnalytics();
+      final results = await Future.wait([
+        _adminRepository.fetchProducts(),
+        _adminRepository.fetchCategories(),
+        _adminRepository.fetchOffers(),
+        _adminRepository.fetchCombos(),
+        _adminRepository.fetchOrders(),
+        _adminRepository.fetchGoldRates(),
+        _adminRepository.fetchAnalytics(),
+      ]);
 
       emit(AdminLoaded(
-        products: products,
-        categories: categories,
-        offers: offers,
-        combos: combos,
-        orders: orders,
-        goldRates: goldRates,
-        analytics: analytics,
+        products: results[0] as List<ProductModel>,
+        categories: results[1] as List<AdminCategoryModel>,
+        offers: results[2] as List<OfferModel>,
+        combos: results[3] as List<ComboModel>,
+        orders: results[4] as List<OrderModel>,
+        goldRates: results[5] as GoldRateModel,
+        analytics: results[6] as AdminAnalyticsModel,
       ));
     } catch (e) {
-      emit(AdminError('Failed to load store data: ${e.toString()}'));
+      emit(AdminError('Failed to load store data: $e'));
     }
   }
 

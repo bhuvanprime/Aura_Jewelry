@@ -400,7 +400,10 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<List<ProductModel>> fetchProducts() async {
     try {
-      final snapshot = await _firebaseService.firestore.collection('products').get();
+      final snapshot = await _firebaseService.firestore
+          .collection('products')
+          .get()
+          .timeout(const Duration(milliseconds: 800));
       if (snapshot.docs.isNotEmpty) {
         return snapshot.docs.map((doc) {
           final data = doc.data();
@@ -460,7 +463,10 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<List<AdminCategoryModel>> fetchCategories() async {
     try {
-      final snapshot = await _firebaseService.firestore.collection('categories').get();
+      final snapshot = await _firebaseService.firestore
+          .collection('categories')
+          .get()
+          .timeout(const Duration(milliseconds: 800));
       if (snapshot.docs.isNotEmpty) {
         return snapshot.docs.map((doc) {
           final data = doc.data();
@@ -520,7 +526,10 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<List<OfferModel>> fetchOffers() async {
     try {
-      final snapshot = await _firebaseService.firestore.collection('offers').get();
+      final snapshot = await _firebaseService.firestore
+          .collection('offers')
+          .get()
+          .timeout(const Duration(milliseconds: 800));
       if (snapshot.docs.isNotEmpty) {
         return snapshot.docs.map((doc) {
           final data = doc.data();
@@ -588,7 +597,10 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<List<ComboModel>> fetchCombos() async {
     try {
-      final snapshot = await _firebaseService.firestore.collection('combos').get();
+      final snapshot = await _firebaseService.firestore
+          .collection('combos')
+          .get()
+          .timeout(const Duration(milliseconds: 800));
       if (snapshot.docs.isNotEmpty) {
         return snapshot.docs.map((doc) {
           final data = doc.data();
@@ -650,7 +662,8 @@ class AdminRepositoryImpl implements AdminRepository {
       final snapshot = await _firebaseService.firestore
           .collection('orders')
           .orderBy('orderDate', descending: true)
-          .get();
+          .get()
+          .timeout(const Duration(milliseconds: 800));
       if (snapshot.docs.isNotEmpty) {
         return snapshot.docs.map((doc) {
           final data = doc.data();
@@ -714,7 +727,11 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<GoldRateModel> fetchGoldRates() async {
     try {
-      final doc = await _firebaseService.firestore.collection('settings').doc('gold_rates').get();
+      final doc = await _firebaseService.firestore
+          .collection('settings')
+          .doc('gold_rates')
+          .get()
+          .timeout(const Duration(milliseconds: 800));
       if (doc.exists && doc.data() != null) {
         return GoldRateModel.fromJson(doc.data()!);
       }
@@ -743,11 +760,8 @@ class AdminRepositoryImpl implements AdminRepository {
 
   @override
   Future<AdminAnalyticsModel> fetchAnalytics() async {
-    final products = await fetchProducts();
-    final categories = await fetchCategories();
-    final offers = await fetchOffers();
-    final combos = await fetchCombos();
-    final orders = await fetchOrders();
+    final products = _mockProducts;
+    final orders = _mockOrders;
 
     double revenue = 0.0;
     int activeCount = 0;
@@ -765,10 +779,8 @@ class AdminRepositoryImpl implements AdminRepository {
 
     final double aov = orders.isNotEmpty ? (revenue / orders.length) : 0.0;
 
-    // Low stock items (< 5 units)
     final lowStock = products.where((p) => p.stockCount <= 5).toList();
 
-    // Category distribution counts
     final Map<String, int> catDist = {};
     for (final p in products) {
       catDist[p.categoryId] = (catDist[p.categoryId] ?? 0) + 1;
@@ -790,9 +802,9 @@ class AdminRepositoryImpl implements AdminRepository {
       rejectedOrdersCount: rejectedCount,
       averageOrderValue: aov,
       totalProducts: products.length,
-      totalCategories: categories.length,
-      activeOffersCount: offers.where((o) => o.isActive).length,
-      activeCombosCount: combos.where((c) => c.inStock).length,
+      totalCategories: _mockCategories.length,
+      activeOffersCount: _mockOffers.where((o) => o.isActive).length,
+      activeCombosCount: _mockCombos.where((c) => c.inStock).length,
       lowStockProducts: lowStock,
       categoryDistribution: catDist,
       monthlyRevenue: monthlyPoints,
