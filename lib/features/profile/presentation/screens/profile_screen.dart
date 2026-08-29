@@ -9,6 +9,7 @@ import '../../../auth/bloc/auth_bloc.dart';
 import '../../../auth/bloc/auth_event.dart';
 import '../../../auth/bloc/auth_state.dart';
 import '../../../admin/presentation/screens/admin_dashboard_screen.dart';
+import '../../../../core/crypto/admin_credentials.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -136,20 +137,6 @@ class _SignInPromptView extends StatelessWidget {
                   context.read<AuthBloc>().add(AuthGoogleSignInRequested());
                 },
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextButton.icon(
-              icon: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.maroonDeep, size: 18),
-              label: const Text(
-                'Sign in as Store Admin (Admin@acj.com)',
-                style: TextStyle(color: AppColors.maroonDeep, fontWeight: FontWeight.bold),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  AuraPageRoute(page: const _LoginScreen(defaultEmail: 'Admin@acj.com')),
-                );
-              },
             ),
           ],
         ),
@@ -450,35 +437,36 @@ class _AuthenticatedProfileView extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xxl * 2),
 
-        // Admin Portal Quick Tile
-        Container(
-          margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.maroonDeep, AppColors.maroonBlack],
+        // Admin Portal Quick Tile (Only visible to Master Admin)
+        if (AdminCredentials.isAdminEmail(userIdentifier))
+          Container(
+            margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.maroonDeep, AppColors.maroonBlack],
+              ),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(color: AppColors.auraGold),
             ),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: AppColors.auraGold),
+            child: ListTile(
+              leading: const Icon(Icons.admin_panel_settings, color: AppColors.auraGoldLight),
+              title: const Text(
+                'Store Admin Dashboard',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text(
+                'Items, Categories, Orders, Offers & Analytics',
+                style: TextStyle(color: AppColors.auraGoldLight, fontSize: 11),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.auraGoldLight, size: 16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (ctx) => const AdminDashboardScreen()),
+                );
+              },
+            ),
           ),
-          child: ListTile(
-            leading: const Icon(Icons.admin_panel_settings, color: AppColors.auraGoldLight),
-            title: const Text(
-              'Store Admin Dashboard',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            subtitle: const Text(
-              'Items, Categories, Orders, Offers & Analytics',
-              style: TextStyle(color: AppColors.auraGoldLight, fontSize: 11),
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.auraGoldLight, size: 16),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (ctx) => const AdminDashboardScreen()),
-              );
-            },
-          ),
-        ),
 
         // Settings Tiles
         _SettingsTile(

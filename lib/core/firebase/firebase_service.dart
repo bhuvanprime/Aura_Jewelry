@@ -16,17 +16,20 @@ class FirebaseService {
   Future<void> initialize() async {
     if (!_isInitialized) {
       try {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
+        final options = DefaultFirebaseOptions.currentPlatform;
+        await Firebase.initializeApp(options: options);
         _isInitialized = true;
         debugPrint("Firebase successfully initialized for AuraJewelry project.");
       } catch (e) {
-        debugPrint("Firebase initialize with options fallback: $e");
+        debugPrint("Firebase initialize with options note: $e");
         try {
-          await Firebase.initializeApp();
+          if (Firebase.apps.isEmpty) {
+            await Firebase.initializeApp();
+          }
           _isInitialized = true;
-        } catch (_) {}
+        } catch (inner) {
+          debugPrint("Firebase fallback initialization note (safe in local dev): $inner");
+        }
       }
     }
   }

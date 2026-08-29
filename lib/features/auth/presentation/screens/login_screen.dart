@@ -101,7 +101,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             prefixIcon: Icons.person_outline,
                           ),
                           const SizedBox(height: 24),
-                          const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
