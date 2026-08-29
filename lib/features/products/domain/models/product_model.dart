@@ -9,6 +9,11 @@ class ProductModel extends Equatable {
   final bool isWishlisted;
   final String description;
   final List<String> availableSizes;
+  final String categoryId;
+  final String karat; // '22K', '18K', '24K', 'Platinum'
+  final double grossWeightGrams;
+  final double makingChargesPercent;
+  final int stockCount;
 
   const ProductModel({
     required this.id,
@@ -19,6 +24,11 @@ class ProductModel extends Equatable {
     this.isWishlisted = false,
     this.description = 'No description available.',
     this.availableSizes = const [],
+    this.categoryId = 'ring',
+    this.karat = '22K',
+    this.grossWeightGrams = 8.5,
+    this.makingChargesPercent = 10.0,
+    this.stockCount = 12,
   });
 
   ProductModel copyWith({
@@ -30,6 +40,11 @@ class ProductModel extends Equatable {
     bool? isWishlisted,
     String? description,
     List<String>? availableSizes,
+    String? categoryId,
+    String? karat,
+    double? grossWeightGrams,
+    double? makingChargesPercent,
+    int? stockCount,
   }) {
     return ProductModel(
       id: id ?? this.id,
@@ -40,6 +55,11 @@ class ProductModel extends Equatable {
       isWishlisted: isWishlisted ?? this.isWishlisted,
       description: description ?? this.description,
       availableSizes: availableSizes ?? this.availableSizes,
+      categoryId: categoryId ?? this.categoryId,
+      karat: karat ?? this.karat,
+      grossWeightGrams: grossWeightGrams ?? this.grossWeightGrams,
+      makingChargesPercent: makingChargesPercent ?? this.makingChargesPercent,
+      stockCount: stockCount ?? this.stockCount,
     );
   }
 
@@ -53,6 +73,11 @@ class ProductModel extends Equatable {
       isWishlisted: json['isWishlisted'] ?? false,
       description: json['description'] ?? 'No description available.',
       availableSizes: List<String>.from(json['availableSizes'] ?? []),
+      categoryId: json['categoryId'] ?? 'ring',
+      karat: json['karat'] ?? '22K',
+      grossWeightGrams: (json['grossWeightGrams'] ?? 8.5).toDouble(),
+      makingChargesPercent: (json['makingChargesPercent'] ?? 10.0).toDouble(),
+      stockCount: json['stockCount'] ?? 12,
     );
   }
 
@@ -66,6 +91,11 @@ class ProductModel extends Equatable {
       'isWishlisted': isWishlisted,
       'description': description,
       'availableSizes': availableSizes,
+      'categoryId': categoryId,
+      'karat': karat,
+      'grossWeightGrams': grossWeightGrams,
+      'makingChargesPercent': makingChargesPercent,
+      'stockCount': stockCount,
     };
   }
 
@@ -79,5 +109,10 @@ class ProductModel extends Equatable {
         isWishlisted,
         description,
         availableSizes,
+        categoryId,
+        karat,
+        grossWeightGrams,
+        makingChargesPercent,
+        stockCount,
       ];
 }

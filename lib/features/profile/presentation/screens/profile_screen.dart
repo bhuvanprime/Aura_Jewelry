@@ -8,6 +8,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../auth/bloc/auth_bloc.dart';
 import '../../../auth/bloc/auth_event.dart';
 import '../../../auth/bloc/auth_state.dart';
+import '../../../admin/presentation/screens/admin_dashboard_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -114,6 +115,20 @@ class _SignInPromptView extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: AppSpacing.md),
+            TextButton.icon(
+              icon: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.maroonDeep, size: 18),
+              label: const Text(
+                'Sign in as Store Admin (Admin@acj.com)',
+                style: TextStyle(color: AppColors.maroonDeep, fontWeight: FontWeight.bold),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  AuraPageRoute(page: const _LoginScreen(defaultEmail: 'Admin@acj.com')),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -126,7 +141,8 @@ class _SignInPromptView extends StatelessWidget {
 // ─────────────────────────────────────────────
 
 class _LoginScreen extends StatefulWidget {
-  const _LoginScreen();
+  final String? defaultEmail;
+  const _LoginScreen({this.defaultEmail});
 
   @override
   State<_LoginScreen> createState() => _LoginScreenState();
@@ -134,10 +150,16 @@ class _LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<_LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  late TextEditingController _emailController;
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isSignUp = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.defaultEmail ?? '');
+  }
 
   @override
   void dispose() {
@@ -405,6 +427,36 @@ class _AuthenticatedProfileView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.xxl * 2),
+
+        // Admin Portal Quick Tile
+        Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.maroonDeep, AppColors.maroonBlack],
+            ),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(color: AppColors.auraGold),
+          ),
+          child: ListTile(
+            leading: const Icon(Icons.admin_panel_settings, color: AppColors.auraGoldLight),
+            title: const Text(
+              'Store Admin Dashboard',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            subtitle: const Text(
+              'Items, Categories, Orders, Offers & Analytics',
+              style: TextStyle(color: AppColors.auraGoldLight, fontSize: 11),
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.auraGoldLight, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (ctx) => const AdminDashboardScreen()),
+              );
+            },
+          ),
+        ),
 
         // Settings Tiles
         _SettingsTile(

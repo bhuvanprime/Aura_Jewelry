@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/crypto/admin_credentials.dart';
 import '../domain/models/user_model.dart';
 import '../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
@@ -21,15 +22,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onPasswordLogin(AuthPasswordLoginRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      // Mock: accept any password with 4+ characters
-      await Future.delayed(const Duration(milliseconds: 800));
-      if (event.password.length < 4) {
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      final cleanInput = event.emailOrPhone.trim();
+      final cleanPassword = event.password.trim();
+
+      // Check if user is attempting Admin login
+      if (AdminCredentials.isAdminEmail(cleanInput)) {
+        if (AdminCredentials.verify(cleanInput, cleanPassword)) {
+          final adminUser = UserModel(
+            uid: 'admin_master_001',
+            emailOrPhone: 'Admin@acj.com',
+            role: 'admin',
+          );
+          emit(AuthAuthenticated(adminUser));
+          return;
+        } else {
+          emit(const AuthError('Invalid credentials for Admin access.'));
+          return;
+        }
+      }
+
+      if (cleanPassword.length < 4) {
         emit(const AuthError('Password must be at least 4 characters.'));
         return;
       }
+
       final user = UserModel(
         uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
-        emailOrPhone: event.emailOrPhone,
+        emailOrPhone: cleanInput,
         role: 'customer',
       );
       emit(AuthAuthenticated(user));
