@@ -1,0 +1,35 @@
+{
+    "name": "aura_luxury_jewelry",
+    "short_name": "aura_luxury_jewelry",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "A mobile-first, luxury jewelry e-commerce application built with Flutter, designed to deliver a premium shopping experience for customers while giving business owners full control over inventory and order fulfillment through a dedicated admin panel. The platform is inspired by leading jewelry retail experiences (CaratLane-style visual polish) and targets customers purchasing chains, bangles, rings, and other fine jewelry across men's and women's categories.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
