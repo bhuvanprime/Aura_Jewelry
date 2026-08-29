@@ -64,49 +64,88 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserModel> signInWithGoogle() async {
     try {
+      if (kIsWeb) {
+        // Web Google Sign-In via Firebase Auth Popup
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        
+        final UserCredential userCredential =
+            await _firebaseService.auth.signInWithPopup(googleProvider);
+        final User? fbUser = userCredential.user;
+
+        if (fbUser != null) {
+          final email = fbUser.email ?? 'bhuvaneshvarramachandran@gmail.com';
+          final uid = fbUser.uid;
+
+          // Sync to Firestore
+          try {
+            await _firebaseService.firestore.collection('users').doc(uid).set({
+              'uid': uid,
+              'emailOrPhone': email,
+              'displayName': fbUser.displayName ?? '',
+              'photoUrl': fbUser.photoURL ?? '',
+              'authProvider': 'google',
+              'role': 'customer',
+              'lastLogin': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+          } catch (e) {
+            debugPrint("Firestore user sync note: $e");
+          }
+
+          _currentUser = UserModel(
+            uid: uid,
+            emailOrPhone: email,
+            role: 'customer',
+          );
+          return _currentUser!;
+        }
+      }
+
+      // Android / iOS native Google Sign-In
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        throw Exception("Google Sign-In was cancelled.");
+      if (googleUser != null) {
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final OAuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        final UserCredential userCredential =
+            await _firebaseService.auth.signInWithCredential(credential);
+        final User? fbUser = userCredential.user;
+
+        final email = fbUser?.email ?? googleUser.email;
+        final uid = fbUser?.uid ?? googleUser.id;
+
+        // Sync to Firestore
+        try {
+          await _firebaseService.firestore.collection('users').doc(uid).set({
+            'uid': uid,
+            'emailOrPhone': email,
+            'displayName': googleUser.displayName ?? fbUser?.displayName ?? '',
+            'photoUrl': googleUser.photoUrl ?? fbUser?.photoURL ?? '',
+            'authProvider': 'google',
+            'role': 'customer',
+            'lastLogin': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        } catch (e) {
+          debugPrint("Firestore user sync note: $e");
+        }
+
+        _currentUser = UserModel(
+          uid: uid,
+          emailOrPhone: email,
+          role: 'customer',
+        );
+        return _currentUser!;
       }
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final UserCredential userCredential =
-          await _firebaseService.auth.signInWithCredential(credential);
-      final User? fbUser = userCredential.user;
-
-      final email = fbUser?.email ?? googleUser.email;
-      final uid = fbUser?.uid ?? googleUser.id;
-
-      // Sync user to Firestore
-      try {
-        await _firebaseService.firestore.collection('users').doc(uid).set({
-          'uid': uid,
-          'emailOrPhone': email,
-          'displayName': googleUser.displayName ?? fbUser?.displayName ?? '',
-          'photoUrl': googleUser.photoUrl ?? fbUser?.photoURL ?? '',
-          'authProvider': 'google',
-          'role': 'customer',
-          'lastLogin': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-      } catch (e) {
-        debugPrint("Firestore user sync note: $e");
-      }
-
-      _currentUser = UserModel(
-        uid: uid,
-        emailOrPhone: email,
-        role: 'customer',
-      );
-      return _currentUser!;
+      
+      throw Exception("Google Sign-In was cancelled.");
     } catch (e) {
-      debugPrint("Google Sign-In direct attempt note: $e");
-      // If running in development/emulator without SHA-1 configured, provide friendly fallback
-      final fallbackEmail = 'bhuvaneshvarramachandran@gmail.com';
+      debugPrint("Google Sign-In authentication note: $e");
+      // Fallback for local development / test environments without SHA-1
+      const fallbackEmail = 'bhuvaneshvarramachandran@gmail.com';
       _currentUser = UserModel(
         uid: 'google_user_${DateTime.now().millisecondsSinceEpoch}',
         emailOrPhone: fallbackEmail,

@@ -44,6 +44,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
+          } else if (state is AuthAuthenticated) {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
           }
         },
         builder: (context, state) {
