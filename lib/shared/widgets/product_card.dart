@@ -40,6 +40,7 @@ class ProductCard extends StatefulWidget {
 
 class _ProductCardState extends State<ProductCard>
     with SingleTickerProviderStateMixin {
+  int _cardImageIndex = 0;
   late final AnimationController _scaleController;
   late final Animation<double> _scaleAnimation;
 
@@ -124,25 +125,76 @@ class _ProductCardState extends State<ProductCard>
                           ),
                         ),
                       ),
-                      // Product image with shimmer loading
+                      // Product image with multi-image support
                       Positioned.fill(
-                        child: CachedNetworkImage(
-                          imageUrl: widget.product.imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              const ShimmerSkeleton(
-                            width: double.infinity,
-                            height: double.infinity,
-                          ),
-                          errorWidget: (context, url, error) => Center(
-                            child: Icon(
-                              Icons.diamond_outlined,
-                              color: AppColors.auraGoldLight,
-                              size: 40,
+                        child: widget.product.allImages.length > 1
+                            ? PageView.builder(
+                                itemCount: widget.product.allImages.length,
+                                onPageChanged: (idx) {
+                                  setState(() => _cardImageIndex = idx);
+                                },
+                                itemBuilder: (context, idx) {
+                                  return CachedNetworkImage(
+                                    imageUrl: widget.product.allImages[idx],
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => const ShimmerSkeleton(
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                    ),
+                                    errorWidget: (context, url, error) => Center(
+                                      child: Icon(
+                                        Icons.diamond_outlined,
+                                        color: AppColors.auraGoldLight,
+                                        size: 40,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: widget.product.imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const ShimmerSkeleton(
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                ),
+                                errorWidget: (context, url, error) => Center(
+                                  child: Icon(
+                                    Icons.diamond_outlined,
+                                    color: AppColors.auraGoldLight,
+                                    size: 40,
+                                  ),
+                                ),
+                              ),
+                      ),
+                      // Multi-image count pill
+                      if (widget.product.allImages.length > 1)
+                        Positioned(
+                          bottom: 6,
+                          right: 6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.maroonBlack.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.photo_library, size: 10, color: AppColors.auraGoldLight),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${_cardImageIndex + 1}/${widget.product.allImages.length}',
+                                  style: const TextStyle(
+                                    color: AppColors.auraGoldLight,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ),
                       // BIS 916 Certified tag
                       Positioned(
                         top: 9,

@@ -33,6 +33,14 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? _selectedSize;
+  int _currentImageIndex = 0;
+  final PageController _imagePageController = PageController();
+
+  @override
+  void dispose() {
+    _imagePageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +153,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left: Image
+                  // Left: Hero image (constrained width, full height)
                   Expanded(
                     flex: 5,
                     child: Padding(
@@ -183,27 +191,136 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   // ─────────────────────────────────────────────
 
   Widget _buildHeroImage({double? height}) {
-    return SizedBox(
-      height: height,
-      width: double.infinity,
-      child: CachedNetworkImage(
-        imageUrl: widget.product.imageUrl,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => const ShimmerSkeleton(
+    final images = widget.product.allImages;
+
+    return Column(
+      children: [
+        SizedBox(
+          height: height ?? 420,
           width: double.infinity,
-          height: double.infinity,
-        ),
-        errorWidget: (context, url, error) => Container(
-          color: AppColors.sandalDark,
-          child: Center(
-            child: Icon(
-              Icons.image_outlined,
-              color: AppColors.charcoalFaint,
-              size: AppSpacing.huge,
-            ),
+          child: Stack(
+            children: [
+              // PageView Slideshow
+              PageView.builder(
+                controller: _imagePageController,
+                itemCount: images.length,
+                onPageChanged: (idx) {
+                  setState(() => _currentImageIndex = idx);
+                },
+                itemBuilder: (context, idx) {
+                  final imgUrl = images[idx];
+                  return CachedNetworkImage(
+                    imageUrl: imgUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const ShimmerSkeleton(
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: AppColors.sandalDark,
+                      child: const Center(
+                        child: Icon(
+                          Icons.diamond_outlined,
+                          color: AppColors.auraGold,
+                          size: 60,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // Counter Pill (e.g. 1 / 4)
+              if (images.length > 1)
+                Positioned(
+                  top: 50,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.maroonBlack.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.auraGold.withValues(alpha: 0.5)),
+                    ),
+                    child: Text(
+                      '${_currentImageIndex + 1} / ${images.length}',
+                      style: const TextStyle(
+                        color: AppColors.auraGoldLight,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Indicator dots
+              if (images.length > 1)
+                Positioned(
+                  bottom: 14,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(images.length, (idx) {
+                      final isSelected = _currentImageIndex == idx;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        width: isSelected ? 20 : 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.auraGold : Colors.white.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+            ],
           ),
         ),
-      ),
+
+        // Thumbnail strip
+        if (images.length > 1)
+          Container(
+            height: 70,
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            color: AppColors.sandalDark,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: images.length,
+              itemBuilder: (context, idx) {
+                final isSelected = _currentImageIndex == idx;
+                return GestureDetector(
+                  onTap: () {
+                    _imagePageController.animateToPage(
+                      idx,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                  child: Container(
+                    width: 54,
+                    height: 54,
+                    margin: const EdgeInsets.only(right: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isSelected ? AppColors.auraGold : AppColors.hairline,
+                        width: isSelected ? 2.5 : 1,
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: CachedNetworkImage(
+                      imageUrl: images[idx],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 

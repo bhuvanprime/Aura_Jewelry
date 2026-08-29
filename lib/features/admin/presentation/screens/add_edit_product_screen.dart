@@ -28,7 +28,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late TextEditingController _makingChargesController;
   late TextEditingController _stockController;
 
-  String _imageUrl = '';
+  List<String> _images = [];
   String _selectedCategory = 'necklace';
   String _selectedKarat = '22K';
 
@@ -60,7 +60,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _makingChargesController = TextEditingController(text: p != null ? p.makingChargesPercent.toStringAsFixed(1) : '10.0');
     _stockController = TextEditingController(text: p != null ? p.stockCount.toString() : '10');
 
-    _imageUrl = p?.imageUrl ?? 'https://images.unsplash.com/photo-1599643478524-fb66f7ca066d?auto=format&fit=crop&w=600&q=80';
+    if (p != null) {
+      _images = List.from(p.allImages);
+    } else {
+      _images = [
+        'https://images.unsplash.com/photo-1599643478524-fb66f7ca066d?auto=format&fit=crop&w=600&q=80',
+      ];
+    }
+
     _selectedCategory = p?.categoryId ?? 'necklace';
     _selectedKarat = p?.karat ?? '22K';
   }
@@ -77,23 +84,56 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     super.dispose();
   }
 
-  void _openImagePicker() async {
+  void _addNewImage() async {
     final result = await showDialog<String>(
       context: context,
-      builder: (ctx) => ImagePickerDialog(
-        currentImageUrl: _imageUrl,
-        title: 'Update Jewelry Piece Image',
+      builder: (ctx) => const ImagePickerDialog(
+        currentImageUrl: '',
+        title: 'Add New Product Image Link',
       ),
     );
     if (result != null && result.isNotEmpty) {
       setState(() {
-        _imageUrl = result;
+        _images.add(result);
       });
     }
   }
 
+  void _editImage(int index) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => ImagePickerDialog(
+        currentImageUrl: _images[index],
+        title: 'Update Product Image #${index + 1}',
+      ),
+    );
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        _images[index] = result;
+      });
+    }
+  }
+
+  void _removeImage(int index) {
+    if (_images.length <= 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('At least 1 product image is required.')),
+      );
+      return;
+    }
+    setState(() {
+      _images.removeAt(index);
+    });
+  }
+
   void _saveProduct() {
     if (!_formKey.currentState!.validate()) return;
+    if (_images.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please add at least one product image link.')),
+      );
+      return;
+    }
 
     final name = _nameController.text.trim();
     final price = double.parse(_priceController.text.trim());
@@ -108,12 +148,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         .where((s) => s.isNotEmpty)
         .toList();
 
+    final primaryImg = _images.first;
+
     final productToSave = ProductModel(
       id: widget.product?.id ?? '',
       name: name,
       price: price,
       rating: widget.product?.rating ?? 4.9,
-      imageUrl: _imageUrl,
+      imageUrl: primaryImg,
+      images: _images,
       description: description,
       availableSizes: sizes,
       categoryId: _selectedCategory,
@@ -155,45 +198,138 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image Preview & Upload Banner
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        color: AppColors.sandalDark,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                        border: Border.all(color: AppColors.auraGold, width: 2),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: _imageUrl.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: _imageUrl,
-                              fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) => const Icon(Icons.broken_image, size: 40),
-                            )
-                          : const Icon(Icons.diamond_outlined, size: 50, color: AppColors.auraGold),
+              // Multiple Images Showcase & Manager
+              Text(
+                'PRODUCT GALLERY & SLIDESHOW IMAGES (${_images.length})',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.maroonDeep,
+                      letterSpacing: 1.0,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: AppSpacing.sm),
-                    ElevatedButton.icon(
-                      onPressed: _openImagePicker,
-                      icon: const Icon(Icons.photo_library_outlined, size: 18),
-                      label: const Text('Update / Choose Image'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.auraGold,
-                        foregroundColor: AppColors.maroonBlack,
-                      ),
-                    ),
-                  ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Add multiple links (Instagram posts, direct web links). Customers will slide through all images.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.charcoalMuted),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              // Image list horizontal scroller
+              SizedBox(
+                height: 130,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _images.length + 1,
+                  itemBuilder: (context, idx) {
+                    if (idx == _images.length) {
+                      // "+ Add Image" button
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: InkWell(
+                          onTap: _addNewImage,
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          child: Container(
+                            width: 100,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              color: AppColors.sandalDark,
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              border: Border.all(color: AppColors.auraGold, style: BorderStyle.solid, width: 1.5),
+                            ),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_photo_alternate_outlined, color: AppColors.maroonDeep, size: 28),
+                                SizedBox(height: 4),
+                                Text(
+                                  '+ Add Link',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.maroonDeep,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final imgUrl = _images[idx];
+                    final isPrimary = idx == 0;
+
+                    return Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: InkWell(
+                            onTap: () => _editImage(idx),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                            child: Container(
+                              width: 100,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: AppColors.sandalDark,
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                border: Border.all(
+                                  color: isPrimary ? AppColors.auraGold : AppColors.hairline,
+                                  width: isPrimary ? 2.5 : 1,
+                                ),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: CachedNetworkImage(
+                                imageUrl: imgUrl,
+                                fit: BoxFit.cover,
+                                errorWidget: (_, __, ___) => const Center(
+                                  child: Icon(Icons.broken_image, size: 24, color: AppColors.charcoalFaint),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (isPrimary)
+                          Positioned(
+                            bottom: 4,
+                            left: 4,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.maroonDeep,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                              child: const Text(
+                                'Cover',
+                                style: TextStyle(color: AppColors.auraGoldLight, fontSize: 9, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        Positioned(
+                          top: 0,
+                          right: 12,
+                          child: GestureDetector(
+                            onTap: () => _removeImage(idx),
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, color: Colors.white, size: 13),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
+
               const SizedBox(height: AppSpacing.xxl),
 
-              // Title
+              // Jewelry Details
               Text(
-                'JEWELRY DETAILS',
+                'JEWELRY SPECIFICATIONS',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: AppColors.charcoalMuted,
                       letterSpacing: 1.2,

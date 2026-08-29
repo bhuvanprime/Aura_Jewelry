@@ -6,6 +6,7 @@ class ProductModel extends Equatable {
   final double price;
   final double rating;
   final String imageUrl;
+  final List<String> images; // Multiple image URLs (supports Instagram, web URLs, etc.)
   final bool isWishlisted;
   final String description;
   final List<String> availableSizes;
@@ -21,6 +22,7 @@ class ProductModel extends Equatable {
     required this.price,
     required this.rating,
     required this.imageUrl,
+    this.images = const [],
     this.isWishlisted = false,
     this.description = 'No description available.',
     this.availableSizes = const [],
@@ -31,12 +33,20 @@ class ProductModel extends Equatable {
     this.stockCount = 12,
   });
 
+  /// Returns all available images for slideshow/carousel
+  List<String> get allImages {
+    if (images.isNotEmpty) return images;
+    if (imageUrl.isNotEmpty) return [imageUrl];
+    return const [];
+  }
+
   ProductModel copyWith({
     String? id,
     String? name,
     double? price,
     double? rating,
     String? imageUrl,
+    List<String>? images,
     bool? isWishlisted,
     String? description,
     List<String>? availableSizes,
@@ -52,6 +62,7 @@ class ProductModel extends Equatable {
       price: price ?? this.price,
       rating: rating ?? this.rating,
       imageUrl: imageUrl ?? this.imageUrl,
+      images: images ?? this.images,
       isWishlisted: isWishlisted ?? this.isWishlisted,
       description: description ?? this.description,
       availableSizes: availableSizes ?? this.availableSizes,
@@ -64,12 +75,20 @@ class ProductModel extends Equatable {
   }
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    final rawImages = json['images'];
+    List<String> parsedImages = [];
+    if (rawImages is List) {
+      parsedImages = rawImages.map((e) => e.toString()).where((s) => s.isNotEmpty).toList();
+    }
+    final primaryImg = json['imageUrl'] ?? (parsedImages.isNotEmpty ? parsedImages.first : '');
+
     return ProductModel(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
       price: (json['price'] ?? 0).toDouble(),
       rating: (json['rating'] ?? 0).toDouble(),
-      imageUrl: json['imageUrl'] ?? '',
+      imageUrl: primaryImg,
+      images: parsedImages.isNotEmpty ? parsedImages : (primaryImg.isNotEmpty ? [primaryImg] : []),
       isWishlisted: json['isWishlisted'] ?? false,
       description: json['description'] ?? 'No description available.',
       availableSizes: List<String>.from(json['availableSizes'] ?? []),
@@ -87,7 +106,8 @@ class ProductModel extends Equatable {
       'name': name,
       'price': price,
       'rating': rating,
-      'imageUrl': imageUrl,
+      'imageUrl': imageUrl.isNotEmpty ? imageUrl : (images.isNotEmpty ? images.first : ''),
+      'images': allImages,
       'isWishlisted': isWishlisted,
       'description': description,
       'availableSizes': availableSizes,
@@ -106,6 +126,7 @@ class ProductModel extends Equatable {
         price,
         rating,
         imageUrl,
+        images,
         isWishlisted,
         description,
         availableSizes,

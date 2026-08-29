@@ -67,6 +67,36 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
     }
   }
 
+  void _pickStyleImage() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => ImagePickerDialog(
+        currentImageUrl: _styleImage,
+        title: 'Select Sub-Style Image Link',
+      ),
+    );
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        _styleImage = result;
+      });
+    }
+  }
+
+  void _editExistingStyleImage(int index) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => ImagePickerDialog(
+        currentImageUrl: _styles[index].imageUrl,
+        title: 'Update Image for "${_styles[index].name}"',
+      ),
+    );
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        _styles[index] = _styles[index].copyWith(imageUrl: result);
+      });
+    }
+  }
+
   void _addStyle() {
     final name = _styleNameCtrl.text.trim();
     if (name.isEmpty) return;
@@ -125,7 +155,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Icon Image Picker
+              // Main Category Cover & Icon Image Picker
               Center(
                 child: Column(
                   children: [
@@ -148,14 +178,14 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                     TextButton.icon(
                       onPressed: () => _openImagePicker(true),
                       icon: const Icon(Icons.photo_camera, size: 16, color: AppColors.auraGold),
-                      label: const Text('Change Icon Image', style: TextStyle(color: AppColors.auraGold)),
+                      label: const Text('Update Category Image (Instagram / URL)', style: TextStyle(color: AppColors.auraGold)),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Name
+              // Category Name
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
@@ -180,12 +210,12 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              // Sub-styles section
+              // Sub-styles & Collections section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'SUB-STYLES / COLLECTIONS (${_styles.length})',
+                    'SUB-STYLES & IMAGES (${_styles.length})',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: AppColors.maroonDeep,
                           fontWeight: FontWeight.bold,
@@ -196,14 +226,32 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
               ),
               const SizedBox(height: AppSpacing.sm),
 
-              // Add style field
+              // Add style field with image picker
               Row(
                 children: [
+                  GestureDetector(
+                    onTap: _pickStyleImage,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.auraGold),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: CachedNetworkImage(
+                        imageUrl: _styleImage,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => const Icon(Icons.image, size: 20),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       controller: _styleNameCtrl,
                       decoration: const InputDecoration(
-                        hintText: 'Add sub-style (e.g. Solitaire, Temple Haar)',
+                        hintText: 'Sub-style name (e.g. Solitaire, Choker)',
                         filled: true,
                         fillColor: AppColors.warmWhite,
                       ),
@@ -222,7 +270,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
 
-              // Style list
+              // Style list with direct image change tap
               if (_styles.isNotEmpty)
                 ListView.builder(
                   shrinkWrap: true,
@@ -234,11 +282,26 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                       margin: const EdgeInsets.only(bottom: 6),
                       child: ListTile(
                         dense: true,
-                        leading: CircleAvatar(
-                          backgroundImage: CachedNetworkImageProvider(st.imageUrl),
-                          radius: 16,
+                        leading: GestureDetector(
+                          onTap: () => _editExistingStyleImage(idx),
+                          child: CircleAvatar(
+                            backgroundImage: CachedNetworkImageProvider(st.imageUrl),
+                            radius: 18,
+                            child: Align(
+                              alignment: Alignment.bottomRight,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.maroonDeep,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.edit, color: Colors.white, size: 8),
+                              ),
+                            ),
+                          ),
                         ),
                         title: Text(st.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: const Text('Tap thumbnail to change sub-style image', style: TextStyle(fontSize: 10, color: AppColors.charcoalMuted)),
                         trailing: IconButton(
                           icon: const Icon(Icons.close, color: Colors.red, size: 18),
                           onPressed: () {
