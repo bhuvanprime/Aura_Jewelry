@@ -1,6 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../domain/repositories/admin_repository.dart';
+import '../../products/domain/models/product_model.dart';
+import '../domain/models/admin_category_model.dart';
+import '../domain/models/offer_model.dart';
+import '../domain/models/combo_model.dart';
 import '../domain/models/order_model.dart';
+import '../domain/models/gold_rate_model.dart';
+import '../domain/models/analytics_model.dart';
+import '../domain/repositories/admin_repository.dart';
 import 'admin_event.dart';
 import 'admin_state.dart';
 
