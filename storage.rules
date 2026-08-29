@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      // Allow public read for all jewelry photos and media assets
+      allow read: if true;
+      // Allow write for store uploads
+      allow write: if true;
+    }
+  }
+}
