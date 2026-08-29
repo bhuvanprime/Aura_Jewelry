@@ -15,6 +15,12 @@ abstract class AuthRepository {
   /// Logs out the current user.
   Future<void> logout();
 
+  /// Authenticates the user via Google Sign-In (Optional)
+  Future<UserModel> signInWithGoogle();
+
+  /// Authenticates user with email/password
+  Future<UserModel> signInWithPassword(String emailOrPhone, String password);
+
   /// Returns the current authenticated user, if any.
   Future<UserModel?> getCurrentUser();
 }

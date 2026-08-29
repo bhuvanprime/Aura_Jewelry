@@ -45,4 +45,6 @@ class AuthOtpSubmitted extends AuthEvent {
 
 class AuthGuestRequested extends AuthEvent {}
 
+class AuthGoogleSignInRequested extends AuthEvent {}
+
 class AuthLogoutRequested extends AuthEvent {}

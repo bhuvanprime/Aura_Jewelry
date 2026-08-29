@@ -6,6 +6,7 @@ import 'package:aura_luxury_jewelry/features/admin/domain/models/combo_model.dar
 import 'package:aura_luxury_jewelry/features/admin/domain/models/order_model.dart';
 import 'package:aura_luxury_jewelry/features/admin/domain/models/gold_rate_model.dart';
 import 'package:aura_luxury_jewelry/features/admin/data/repositories/admin_repository_impl.dart';
+import 'package:aura_luxury_jewelry/features/auth/data/repositories/auth_repository_impl.dart';
 
 import 'package:aura_luxury_jewelry/core/utils/image_url_resolver.dart';
 
@@ -101,6 +102,13 @@ void main() {
       expect(analytics.totalRevenue, greaterThan(0));
       expect(analytics.totalOrders, greaterThan(0));
       expect(analytics.totalProducts, greaterThan(0));
+    });
+
+    test('Google Sign-In integration executes with customer role', () async {
+      final authRepo = AuthRepositoryImpl();
+      final user = await authRepo.signInWithGoogle();
+      expect(user.role, 'customer');
+      expect(user.emailOrPhone.isNotEmpty, isTrue);
     });
   });
 }

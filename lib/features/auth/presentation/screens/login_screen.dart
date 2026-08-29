@@ -101,11 +101,49 @@ class _LoginScreenState extends State<LoginScreen> {
                             prefixIcon: Icons.person_outline,
                           ),
                           const SizedBox(height: 24),
+                          const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: _onLogin,
                               child: const Text(AppStrings.continueText),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Optional Social / Google Login
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: AppColors.hairlineLight)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('OR', style: TextStyle(color: AppColors.charcoalFaint, fontSize: 12)),
+                              ),
+                              Expanded(child: Divider(color: AppColors.hairlineLight)),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              icon: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                ),
+                                child: const Icon(Icons.g_mobiledata, color: Color(0xFF4285F4), size: 22),
+                              ),
+                              label: const Text(
+                                'Continue with Google (Optional)',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppColors.hairlineLight),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              onPressed: () {
+                                context.read<AuthBloc>().add(AuthGoogleSignInRequested());
+                              },
                             ),
                           ),
                           const SizedBox(height: 16),

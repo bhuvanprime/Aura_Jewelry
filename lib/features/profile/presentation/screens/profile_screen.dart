@@ -116,6 +116,28 @@ class _SignInPromptView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                  child: const Icon(Icons.g_mobiledata, color: Color(0xFF4285F4), size: 22),
+                ),
+                label: const Text('Continue with Google (Optional)'),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.hairlineLight),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                ),
+                onPressed: () {
+                  context.read<AuthBloc>().add(AuthGoogleSignInRequested());
+                },
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             TextButton.icon(
               icon: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.maroonDeep, size: 18),
               label: const Text(
