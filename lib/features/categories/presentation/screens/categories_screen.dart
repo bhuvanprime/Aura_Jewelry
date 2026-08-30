@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_animations.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/firebase/firebase_service.dart';
 import '../../../../shared/widgets/shimmer_skeleton.dart';
+import '../../../admin/domain/models/admin_category_model.dart';
 import 'category_items_screen.dart';
 
 // ─────────────────────────────────────────────
@@ -43,58 +46,6 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   late TabController _tabController;
   int? _expandedIndex;
   bool _isShopByStyle = true;
-
-  // ─────────────────────────────────────────────
-  // Mock Category Data
-  // ─────────────────────────────────────────────
-
-  final List<MainCategory> _womenCategories = [
-    MainCategory(
-      'ring',
-      'Rings',
-      'https://images.unsplash.com/photo-1605100804763-247f67b2548e?auto=format&fit=crop&w=150&q=80',
-      [
-        CategoryStyle('All Rings', 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Engagement', 'https://images.unsplash.com/photo-1599643478524-fb66f7ca066d?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Solitaire', 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Dailywear', 'https://images.unsplash.com/photo-1599643478524-fb66f7ca066d?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Platinum', 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Bands', 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Cocktail', 'https://images.unsplash.com/photo-1599643478524-fb66f7ca066d?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('22KT', 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?auto=format&fit=crop&w=200&q=80'),
-      ],
-    ),
-    MainCategory(
-      'earring',
-      'Earrings',
-      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=150&q=80',
-      [
-        CategoryStyle('All Earrings', 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Studs', 'https://images.unsplash.com/photo-1629224316810-9d8805b95e76?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Hoops', 'https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Drops', 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=200&q=80'),
-      ],
-    ),
-    MainCategory(
-      'bracelet',
-      'Bracelets & Bangles',
-      'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=150&q=80',
-      [
-        CategoryStyle('Tennis', 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Bangles', 'https://images.unsplash.com/photo-1573408301145-b98c4af3066b?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Chain Link', 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=200&q=80'),
-      ],
-    ),
-    MainCategory(
-      'watch',
-      'Watches',
-      'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=150&q=80',
-      [
-        CategoryStyle('Luxury', 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=200&q=80'),
-        CategoryStyle('Automatic', 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=200&q=80'),
-      ],
-    ),
-  ];
 
   @override
   void initState() {
@@ -143,12 +94,37 @@ class _CategoriesScreenState extends State<CategoriesScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildCategoryBody(_womenCategories),
-          _buildEmptyState(),
-        ],
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseService.instance.firestore.collection('categories').snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.maroonDeep),
+            );
+          }
+
+          final liveCategories = snapshot.data!.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            final cat = AdminCategoryModel.fromJson(data);
+            return MainCategory(
+              cat.id,
+              cat.name,
+              cat.iconUrl,
+              cat.styles.isNotEmpty
+                  ? cat.styles.map((s) => CategoryStyle(s.name, s.imageUrl)).toList()
+                  : [CategoryStyle('All ${cat.name}', cat.iconUrl)],
+            );
+          }).toList();
+
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              _buildCategoryBody(liveCategories),
+              _buildEmptyState(),
+            ],
+          );
+        },
       ),
     );
   }
@@ -205,7 +181,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
             duration: AppAnimations.normal,
             curve: Curves.easeInOutCubic,
             alignment: Alignment.topCenter,
-            child: _expandedIndex != null
+            child: _expandedIndex != null && _expandedIndex! < categories.length
                 ? _buildExpandedSection(categories[_expandedIndex!])
                 : const SizedBox(width: double.infinity),
           ),
@@ -278,9 +254,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   }
 
   double _getTriangleOffset() {
-    // Rough center of the first visible chip — adjust as needed
     if (_expandedIndex == null) return 40;
-    // Each chip is ~150px wide + 12px gap, starting at 16px padding
     return 16 + (_expandedIndex! * 162.0) + 60;
   }
 
@@ -361,7 +335,6 @@ class _CategoriesScreenState extends State<CategoriesScreen>
         final style = styles[index];
         return GestureDetector(
           onTap: () {
-            // Navigate to the items listing for this category
             Navigator.push(
               context,
               AuraPageRoute(
