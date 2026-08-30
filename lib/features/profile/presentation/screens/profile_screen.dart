@@ -10,6 +10,7 @@ import '../../../auth/bloc/auth_event.dart';
 import '../../../auth/bloc/auth_state.dart';
 import '../../../admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../../../core/crypto/admin_credentials.dart';
+import 'addresses_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -477,7 +478,12 @@ class _AuthenticatedProfileView extends StatelessWidget {
         _SettingsTile(
           icon: Icons.location_on_outlined,
           title: AppStrings.shippingAddresses,
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (ctx) => const AddressesScreen()),
+            );
+          },
         ),
         _SettingsTile(
           icon: Icons.credit_card_outlined,

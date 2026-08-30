@@ -8,6 +8,7 @@ import '../../bloc/cart_bloc.dart';
 import '../../bloc/cart_event.dart';
 import '../../bloc/cart_state.dart';
 import '../widgets/cart_item_tile.dart';
+import 'checkout_screen.dart';
 import 'checkout_success_screen.dart';
 
 class CartScreen extends StatelessWidget {
@@ -112,11 +113,10 @@ class CartScreen extends StatelessWidget {
                           ),
                           child: ElevatedButton(
                             onPressed: () {
-                              context.read<CartBloc>().add(CartCleared());
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const CheckoutSuccessScreen(),
+                                  builder: (context) => const CheckoutScreen(),
                                 ),
                               );
                             },
