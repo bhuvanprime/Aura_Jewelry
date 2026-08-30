@@ -15,6 +15,7 @@ import '../../../search/presentation/screens/search_screen.dart';
 import '../../../cart/presentation/screens/cart_screen.dart';
 import 'wishlist_screen.dart';
 import '../widgets/hero_banner.dart';
+import '../widgets/combo_slideshow_banner.dart';
 import '../widgets/category_strip.dart';
 import '../widgets/product_grid_section.dart';
 import '../widgets/trust_strip.dart';
@@ -382,11 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       key: const ValueKey('default_home'),
       children: [
-        HeroBanner(
-          onShopNowTap: () {
-            // Navigate to a specific category or promo page
-          },
-        ),
+        const ComboSlideshowBanner(),
         const CategoryStrip(),
         ProductGridSection(
           title: AppStrings.bestsellers,

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../products/domain/models/product_model.dart';
 
 /// Model representing a Curated Jewelry Set / Combo (e.g. Royal Bridal Set)
 class ComboModel extends Equatable {
@@ -92,6 +93,24 @@ class ComboModel extends Equatable {
       'inStock': inStock,
       'stockCount': stockCount,
     };
+  }
+
+  ProductModel toProductModel() {
+    return ProductModel(
+      id: 'combo_$id',
+      name: title,
+      price: comboPrice,
+      rating: 5.0,
+      imageUrl: imageUrl,
+      images: [imageUrl],
+      description: description,
+      availableSizes: const ['Full Bridal Set'],
+      categoryId: 'bridal',
+      karat: '22K',
+      grossWeightGrams: 85.0,
+      makingChargesPercent: 10.0,
+      stockCount: stockCount,
+    );
   }
 
   @override

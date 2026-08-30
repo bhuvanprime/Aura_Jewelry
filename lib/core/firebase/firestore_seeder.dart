@@ -4,6 +4,7 @@ import 'firebase_service.dart';
 import '../../features/products/domain/models/product_model.dart';
 import '../../features/admin/domain/models/admin_category_model.dart';
 import '../../features/admin/domain/models/offer_model.dart';
+import '../../features/admin/domain/models/combo_model.dart';
 import '../../features/admin/domain/models/gold_rate_model.dart';
 
 /// Ensures Cloud Firestore in project `aurajewelry-2d68d` is populated with initial
@@ -199,7 +200,55 @@ class FirestoreSeeder {
         await firestore.collection('offers').doc(initialOffer.id).set(initialOffer.toJson(), SetOptions(merge: true));
       }
 
-      // 4. Seed Gold Rates if empty
+      // 4. Seed Combos / Curated Sets if empty
+      final comboSnap = await firestore.collection('combos').limit(1).get().timeout(const Duration(seconds: 2));
+      if (comboSnap.docs.isEmpty) {
+        final initialCombos = [
+          const ComboModel(
+            id: 'combo_bridal_1',
+            title: 'Maharani Kundan Bridal Ensemble',
+            description: 'Opulent 4-piece 22K gold wedding set featuring layered choker, matching jhumkas, maang tikka, and antique kada.',
+            originalPrice: 385000,
+            comboPrice: 345000,
+            discountPercent: 10.4,
+            includedProductIds: ['prod_1', 'prod_2', 'prod_4', 'prod_5'],
+            includedProductNames: [
+              'Nizam Heritage Polki Choker (48.5g)',
+              'Mayur Jhumka Chandbalis (16.2g)',
+              'Padmavati Floral Maang Tikka (12.0g)',
+              'Rajwada Antique Kada Bangle (36.4g)',
+            ],
+            imageUrl: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=800&q=80',
+            tag: '👑 Royal Bridal Set',
+            inStock: true,
+            stockCount: 4,
+          ),
+          const ComboModel(
+            id: 'combo_festive_2',
+            title: 'Padmavati Heritage Solitaire Trio',
+            description: 'Handcrafted 18K yellow gold cocktail ring, matching diamond studs, and tennis bracelet.',
+            originalPrice: 198000,
+            comboPrice: 175000,
+            discountPercent: 11.6,
+            includedProductIds: ['prod_3', 'prod_2'],
+            includedProductNames: [
+              'Padmavati Solitaire VVS1 Ring (6.8g)',
+              'Brilliant Cut Diamond Studs (8.5g)',
+              'Solid Gold Tennis Bracelet (18.2g)',
+            ],
+            imageUrl: 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?auto=format&fit=crop&w=800&q=80',
+            tag: '✨ Festive Trio',
+            inStock: true,
+            stockCount: 6,
+          ),
+        ];
+
+        for (final cm in initialCombos) {
+          await firestore.collection('combos').doc(cm.id).set(cm.toJson(), SetOptions(merge: true));
+        }
+      }
+
+      // 5. Seed Gold Rates if empty
       final rateSnap = await firestore.collection('settings').doc('gold_rates').get().timeout(const Duration(seconds: 2));
       if (!rateSnap.exists) {
         await firestore.collection('settings').doc('gold_rates').set(GoldRateModel.defaultRates().toJson(), SetOptions(merge: true));
