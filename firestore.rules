@@ -1,54 +1,39 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
+    // 1. Catalog Collections (Products, Categories, Combos, Offers, Live Gold Rates)
+    match /products/{document=**} {
+      allow read, write: if true;
     }
 
-    // Helper function to check if user is Admin
-    function isAdmin() {
-      return isAuthenticated() && (
-        request.auth.token.email == 'Admin@acj.com' ||
-        request.auth.token.role == 'admin'
-      );
+    match /categories/{document=**} {
+      allow read, write: if true;
     }
 
-    // Public catalog collections (Products, Categories, Offers, Combos, Gold Rates)
-    match /products/{productId} {
-      allow read: if true;
-      allow write: if true;
+    match /combos/{document=**} {
+      allow read, write: if true;
     }
 
-    match /categories/{categoryId} {
-      allow read: if true;
-      allow write: if true;
+    match /offers/{document=**} {
+      allow read, write: if true;
     }
 
-    match /offers/{offerId} {
-      allow read: if true;
-      allow write: if true;
+    match /settings/{document=**} {
+      allow read, write: if true;
     }
 
-    match /combos/{comboId} {
-      allow read: if true;
-      allow write: if true;
+    // 2. Orders & Customer Profiles
+    match /orders/{document=**} {
+      allow read, write: if true;
     }
 
-    match /gold_rates/{rateId} {
-      allow read: if true;
-      allow write: if true;
+    match /users/{document=**} {
+      allow read, write: if true;
     }
 
-    // Customer orders and fulfillment
-    match /orders/{orderId} {
-      allow read: if true;
-      allow create: if true;
-      allow update, delete: if true;
-    }
-
-    // Customer profiles
-    match /users/{userId} {
+    // Fallback rule for all documents
+    match /{document=**} {
       allow read, write: if true;
     }
   }
