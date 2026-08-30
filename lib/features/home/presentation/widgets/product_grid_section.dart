@@ -11,6 +11,7 @@ import '../../../products/bloc/product_event.dart';
 import '../../../products/bloc/product_state.dart';
 import '../../../products/domain/models/product_model.dart';
 import '../../../products/presentation/screens/product_detail_screen.dart';
+import '../../../categories/presentation/screens/category_items_screen.dart';
 
 /// Reusable product grid section with Rajwada styling.
 ///
@@ -53,7 +54,15 @@ class ProductGridSection extends StatelessWidget {
               ),
               GestureDetector(
                 onTap: () {
-                  // Navigate to View All
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (ctx) => CategoryItemsScreen(
+                        categoryId: 'all',
+                        categoryName: title,
+                      ),
+                    ),
+                  );
                 },
                 child: Text(
                   'View all →',

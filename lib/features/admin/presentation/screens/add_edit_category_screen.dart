@@ -199,10 +199,36 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
               const SizedBox(height: AppSpacing.md),
 
               // Segment (Women, Men, Bridal, Kids)
+              Text(
+                'TARGET AUDIENCE / SEGMENT *',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.maroonDeep,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                    ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Wrap(
+                spacing: 8,
+                children: ['Women', 'Men', 'Bridal', 'Unisex'].map((s) {
+                  final isSel = _segmentController.text.trim().toLowerCase() == s.toLowerCase();
+                  return ChoiceChip(
+                    label: Text(s),
+                    selected: isSel,
+                    selectedColor: AppColors.auraGold,
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _segmentController.text = s);
+                      }
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: AppSpacing.sm),
               TextFormField(
                 controller: _segmentController,
                 decoration: const InputDecoration(
-                  labelText: 'Audience / Segment',
+                  labelText: 'Custom Segment Name',
                   hintText: 'e.g. Women, Men, Bridal, Unisex',
                   filled: true,
                   fillColor: AppColors.warmWhite,

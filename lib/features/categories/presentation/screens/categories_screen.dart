@@ -25,9 +25,16 @@ class MainCategory {
   final String id;
   final String name;
   final String iconUrl;
+  final String segment;
   final List<CategoryStyle> styles;
 
-  MainCategory(this.id, this.name, this.iconUrl, this.styles);
+  MainCategory(
+    this.id,
+    this.name,
+    this.iconUrl,
+    this.styles, {
+    this.segment = 'Women',
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -44,7 +51,8 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int? _expandedIndex;
+  int? _womenExpandedIndex = 0; // Default first category open
+  int? _menExpandedIndex = 0;
   bool _isShopByStyle = true;
 
   @override
@@ -59,15 +67,74 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     super.dispose();
   }
 
-  void _toggleCategory(int index) {
+  void _toggleWomenCategory(int index) {
     setState(() {
-      if (_expandedIndex == index) {
-        _expandedIndex = null; // collapse
+      if (_womenExpandedIndex == index) {
+        _womenExpandedIndex = null;
       } else {
-        _expandedIndex = index; // expand new
-        _isShopByStyle = true; // reset to style tab
+        _womenExpandedIndex = index;
+        _isShopByStyle = true;
       }
     });
+  }
+
+  void _toggleMenCategory(int index) {
+    setState(() {
+      if (_menExpandedIndex == index) {
+        _menExpandedIndex = null;
+      } else {
+        _menExpandedIndex = index;
+        _isShopByStyle = true;
+      }
+    });
+  }
+
+  List<MainCategory> _getDefaultMenCategories() {
+    return [
+      MainCategory(
+        'men_kada',
+        "Men's Kada",
+        'https://images.unsplash.com/photo-1611591475155-42e9fba5ce55?auto=format&fit=crop&w=400&q=80',
+        [
+          CategoryStyle('22K Royal Lion Kada', 'https://images.unsplash.com/photo-1611591475155-42e9fba5ce55?auto=format&fit=crop&w=400&q=80'),
+          CategoryStyle('Rudraksha Gold Kada', 'https://images.unsplash.com/photo-1573408301145-b98c4af3066b?auto=format&fit=crop&w=400&q=80'),
+          CategoryStyle('Solid 24K Heritage Bangle', 'https://images.unsplash.com/photo-1599643478524-fb66f7ca066d?auto=format&fit=crop&w=400&q=80'),
+        ],
+        segment: 'Men',
+      ),
+      MainCategory(
+        'men_rings',
+        'Signet Rings',
+        'https://images.unsplash.com/photo-1605100804763-247f67b2548e?auto=format&fit=crop&w=400&q=80',
+        [
+          CategoryStyle('Diamond Solitaire Band', 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?auto=format&fit=crop&w=400&q=80'),
+          CategoryStyle('Navratna Royal Ring', 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=400&q=80'),
+          CategoryStyle('Platinum Classic Band', 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=400&q=80'),
+        ],
+        segment: 'Men',
+      ),
+      MainCategory(
+        'men_chains',
+        'Chains & Pendants',
+        'https://images.unsplash.com/photo-1599643478524-fb66f7ca066d?auto=format&fit=crop&w=400&q=80',
+        [
+          CategoryStyle('Rope Link Gold Chain', 'https://images.unsplash.com/photo-1599643478524-fb66f7ca066d?auto=format&fit=crop&w=400&q=80'),
+          CategoryStyle('Lord Shiva Trishul Pendant', 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=400&q=80'),
+          CategoryStyle('Cuban 22K Solid Link', 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=400&q=80'),
+        ],
+        segment: 'Men',
+      ),
+      MainCategory(
+        'men_cufflinks',
+        'Cufflinks & Buttons',
+        'https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=400&q=80',
+        [
+          CategoryStyle('Emerald Kurta Buttons', 'https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=400&q=80'),
+          CategoryStyle('Gold & Diamond Cufflinks', 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?auto=format&fit=crop&w=400&q=80'),
+        ],
+        segment: 'Men',
+      ),
+    ];
   }
 
   @override
@@ -77,33 +144,37 @@ class _CategoriesScreenState extends State<CategoriesScreen>
       appBar: AppBar(
         backgroundColor: AppColors.sandal,
         surfaceTintColor: AppColors.transparent,
+        elevation: 0,
         title: Text(
           AppStrings.categories,
-          style: Theme.of(context).textTheme.displayMedium,
+          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                color: AppColors.maroonDeep,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.maroonDeep,
           labelColor: AppColors.maroonDeep,
           unselectedLabelColor: AppColors.charcoalMuted,
-          labelStyle: Theme.of(context).textTheme.headlineSmall,
+          labelStyle: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           unselectedLabelStyle: Theme.of(context).textTheme.bodyLarge,
           tabs: const [
-            Tab(text: AppStrings.women),
-            Tab(text: AppStrings.men),
+            Tab(text: 'WOMEN & BRIDAL'),
+            Tab(text: "MEN'S ROYAL EDIT"),
           ],
         ),
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseService.instance.firestore.collection('categories').snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
             return const Center(
               child: CircularProgressIndicator(color: AppColors.maroonDeep),
             );
           }
 
-          final liveCategories = snapshot.data!.docs.map((doc) {
+          final liveCategories = (snapshot.data?.docs ?? []).map((doc) {
             final data = doc.data();
             data['id'] = doc.id;
             final cat = AdminCategoryModel.fromJson(data);
@@ -114,14 +185,38 @@ class _CategoriesScreenState extends State<CategoriesScreen>
               cat.styles.isNotEmpty
                   ? cat.styles.map((s) => CategoryStyle(s.name, s.imageUrl)).toList()
                   : [CategoryStyle('All ${cat.name}', cat.iconUrl)],
+              segment: cat.segment,
             );
           }).toList();
+
+          // Filter by segment
+          final womenCategories = liveCategories.where((c) {
+            final s = c.segment.toLowerCase();
+            return s != 'men';
+          }).toList();
+
+          var menCategories = liveCategories.where((c) {
+            final s = c.segment.toLowerCase();
+            return s == 'men' || s == 'unisex';
+          }).toList();
+
+          if (menCategories.isEmpty) {
+            menCategories = _getDefaultMenCategories();
+          }
 
           return TabBarView(
             controller: _tabController,
             children: [
-              _buildCategoryBody(liveCategories),
-              _buildEmptyState(),
+              _buildCategoryBody(
+                categories: womenCategories,
+                expandedIndex: _womenExpandedIndex,
+                onToggle: _toggleWomenCategory,
+              ),
+              _buildCategoryBody(
+                categories: menCategories,
+                expandedIndex: _menExpandedIndex,
+                onToggle: _toggleMenCategory,
+              ),
             ],
           );
         },
@@ -129,36 +224,48 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Text(
-        AppStrings.comingSoon,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.charcoalMuted,
-            ),
-      ),
-    );
-  }
+  Widget _buildCategoryBody({
+    required List<MainCategory> categories,
+    required int? expandedIndex,
+    required ValueChanged<int> onToggle,
+  }) {
+    if (categories.isEmpty) {
+      return Center(
+        child: Text(
+          AppStrings.noResults,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppColors.charcoalMuted,
+              ),
+        ),
+      );
+    }
 
-  Widget _buildCategoryBody(List<MainCategory> categories) {
+    final safeExpandedIndex = (expandedIndex != null && expandedIndex < categories.length)
+        ? expandedIndex
+        : (categories.isNotEmpty ? 0 : null);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 120),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSpacing.lg),
-          // "Top Categories" heading
-          Text(
-            AppStrings.topCategories,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.charcoalMuted,
-                ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: Text(
+              'EXPLORE BY CATEGORY',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.maroonDeep,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+            ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
 
-          // Horizontal scrollable category cards
+          // Horizontal scrollable category pill chips
           SizedBox(
-            height: 56,
+            height: 54,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -166,23 +273,24 @@ class _CategoriesScreenState extends State<CategoriesScreen>
               separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.md),
               itemBuilder: (context, index) {
                 final cat = categories[index];
-                final isExpanded = _expandedIndex == index;
+                final isExpanded = safeExpandedIndex == index;
                 return _CategoryChip(
                   category: cat,
                   isExpanded: isExpanded,
-                  onTap: () => _toggleCategory(index),
+                  onTap: () => onToggle(index),
                 );
               },
             ),
           ),
+          const SizedBox(height: AppSpacing.md),
 
-          // Expanded accordion section
+          // Expanded accordion dropdown section
           AnimatedSize(
             duration: AppAnimations.normal,
             curve: Curves.easeInOutCubic,
             alignment: Alignment.topCenter,
-            child: _expandedIndex != null && _expandedIndex! < categories.length
-                ? _buildExpandedSection(categories[_expandedIndex!])
+            child: safeExpandedIndex != null
+                ? _buildExpandedSection(categories[safeExpandedIndex], safeExpandedIndex)
                 : const SizedBox(width: double.infinity),
           ),
         ],
@@ -191,51 +299,75 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   }
 
   // ─────────────────────────────────────────────
-  // Expanded Section (accordion below the strip)
+  // Expanded Section (dropdown accordion)
   // ─────────────────────────────────────────────
 
-  Widget _buildExpandedSection(MainCategory category) {
+  Widget _buildExpandedSection(MainCategory category, int index) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         children: [
-          // Triangle pointer
-          const SizedBox(height: AppSpacing.xs),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: EdgeInsets.only(left: _getTriangleOffset()),
-              child: CustomPaint(
-                size: const Size(16, 10),
-                painter: _TrianglePainter(color: AppColors.sandal),
-              ),
-            ),
-          ),
-
-          // Content card
+          // Content card with jaali-styled borders
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.sandal,
+              color: AppColors.warmWhite,
               borderRadius: AppSpacing.borderRadiusLg,
               border: Border.all(
-                color: AppColors.hairlineLight,
-                width: AppSpacing.hairlineWidth,
+                color: AppColors.auraGold.withValues(alpha: 0.5),
+                width: 1.2,
               ),
               boxShadow: AppShadows.whisper,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Header with Category Title & "View Full Catalog" link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      category.name.toUpperCase(),
+                      style: const TextStyle(
+                        color: AppColors.maroonDeep,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (ctx) => CategoryItemsScreen(
+                              categoryId: category.id,
+                              categoryName: category.name,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'View All Items →',
+                        style: TextStyle(
+                          color: AppColors.maroonDeep,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
                 // Style / Price toggle
                 _buildToggleTabs(),
                 const SizedBox(height: AppSpacing.lg),
-                // Style grid or price placeholder
+                // Sub-style Grid
                 _isShopByStyle
                     ? _buildStyleGrid(category.styles, category.id)
                     : Padding(
-                        padding: const EdgeInsets.all(AppSpacing.xxl),
+                        padding: const EdgeInsets.all(AppSpacing.xl),
                         child: Center(
                           child: Text(
                             AppStrings.priceFiltersComingSoon,
@@ -253,11 +385,6 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     );
   }
 
-  double _getTriangleOffset() {
-    if (_expandedIndex == null) return 40;
-    return 16 + (_expandedIndex! * 162.0) + 60;
-  }
-
   // ─────────────────────────────────────────────
   // Shop By Style / Shop By Price Toggle
   // ─────────────────────────────────────────────
@@ -265,10 +392,10 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   Widget _buildToggleTabs() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.warmWhite,
+        color: AppColors.sandal,
         borderRadius: AppSpacing.borderRadiusPill,
       ),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(3),
       child: Row(
         children: [
           Expanded(
@@ -276,7 +403,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
               onTap: () => setState(() => _isShopByStyle = true),
               child: AnimatedContainer(
                 duration: AppAnimations.fast,
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: _isShopByStyle ? AppColors.maroonDeep : AppColors.transparent,
                   borderRadius: AppSpacing.borderRadiusPill,
@@ -284,9 +411,11 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                 alignment: Alignment.center,
                 child: Text(
                   AppStrings.shopByStyle,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: _isShopByStyle ? AppColors.warmWhite : AppColors.charcoal,
-                      ),
+                  style: TextStyle(
+                    color: _isShopByStyle ? AppColors.warmWhite : AppColors.charcoal,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ),
@@ -296,7 +425,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
               onTap: () => setState(() => _isShopByStyle = false),
               child: AnimatedContainer(
                 duration: AppAnimations.fast,
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: !_isShopByStyle ? AppColors.maroonDeep : AppColors.transparent,
                   borderRadius: AppSpacing.borderRadiusPill,
@@ -304,9 +433,11 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                 alignment: Alignment.center,
                 child: Text(
                   AppStrings.shopByPrice,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: !_isShopByStyle ? AppColors.warmWhite : AppColors.charcoal,
-                      ),
+                  style: TextStyle(
+                    color: !_isShopByStyle ? AppColors.warmWhite : AppColors.charcoal,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ),
@@ -317,7 +448,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   }
 
   // ─────────────────────────────────────────────
-  // 4-Column Style Grid (small circular images)
+  // 3-Column / 4-Column Sub-Style Grid with circular images
   // ─────────────────────────────────────────────
 
   Widget _buildStyleGrid(List<CategoryStyle> styles, String categoryId) {
@@ -325,10 +456,10 @@ class _CategoriesScreenState extends State<CategoriesScreen>
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: AppSpacing.sm,
-        mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 0.75,
+        crossAxisCount: 3,
+        crossAxisSpacing: AppSpacing.md,
+        mainAxisSpacing: AppSpacing.lg,
+        childAspectRatio: 0.8,
       ),
       itemCount: styles.length,
       itemBuilder: (context, index) {
@@ -337,8 +468,8 @@ class _CategoriesScreenState extends State<CategoriesScreen>
           onTap: () {
             Navigator.push(
               context,
-              AuraPageRoute(
-                page: CategoryItemsScreen(
+              MaterialPageRoute(
+                builder: (ctx) => CategoryItemsScreen(
                   categoryId: categoryId,
                   categoryName: style.name,
                 ),
@@ -350,31 +481,38 @@ class _CategoriesScreenState extends State<CategoriesScreen>
             children: [
               // Circular image
               Container(
-                width: 64,
-                height: 64,
+                width: 68,
+                height: 68,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.warmWhite,
                   border: Border.all(
-                    color: AppColors.hairlineLight,
-                    width: AppSpacing.hairlineWidth,
+                    color: AppColors.auraGold,
+                    width: 1.2,
                   ),
+                  boxShadow: AppShadows.whisper,
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: CachedNetworkImage(
                   imageUrl: style.imageUrl,
                   fit: BoxFit.cover,
                   placeholder: (context, url) =>
-                      const ShimmerSkeleton(width: 64, height: 64),
+                      const ShimmerSkeleton(width: 68, height: 68),
+                  errorWidget: (context, url, error) => const Icon(
+                    Icons.diamond_outlined,
+                    color: AppColors.maroonDeep,
+                  ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: 8),
               // Label
               Text(
                 style.name,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.charcoal,
-                    ),
+                style: const TextStyle(
+                  color: AppColors.charcoal,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -388,7 +526,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
 }
 
 // ─────────────────────────────────────────────
-// Horizontal Category Chip (small card)
+// Horizontal Category Chip (Pill card)
 // ─────────────────────────────────────────────
 
 class _CategoryChip extends StatelessWidget {
@@ -414,75 +552,57 @@ class _CategoryChip extends StatelessWidget {
           vertical: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: AppColors.warmWhite,
+          color: isExpanded ? AppColors.maroonDeep : AppColors.warmWhite,
           borderRadius: AppSpacing.borderRadiusPill,
           border: Border.all(
-            color: isExpanded ? AppColors.maroonDeep : AppColors.hairline,
-            width: isExpanded ? 2.0 : AppSpacing.hairlineWidth,
+            color: isExpanded ? AppColors.maroonDeep : AppColors.auraGold.withValues(alpha: 0.5),
+            width: isExpanded ? 1.5 : 1.0,
           ),
-          boxShadow: isExpanded ? AppShadows.whisper : null,
+          boxShadow: isExpanded ? AppShadows.soft : AppShadows.whisper,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Small circular category image
             Container(
-              width: 36,
-              height: 36,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.hairlineLight),
+                border: Border.all(
+                  color: isExpanded ? AppColors.auraGold : AppColors.hairlineLight,
+                ),
               ),
               clipBehavior: Clip.antiAlias,
               child: CachedNetworkImage(
                 imageUrl: category.iconUrl,
                 fit: BoxFit.cover,
                 placeholder: (context, url) =>
-                    const ShimmerSkeleton(width: 36, height: 36),
+                    const ShimmerSkeleton(width: 32, height: 32),
+                errorWidget: (context, url, error) => Icon(
+                  Icons.star,
+                  size: 16,
+                  color: isExpanded ? AppColors.warmWhite : AppColors.maroonDeep,
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            // Category name
             Text(
               category.name,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: AppColors.charcoal,
-                  ),
+              style: TextStyle(
+                color: isExpanded ? AppColors.warmWhite : AppColors.charcoal,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             ),
-            const SizedBox(width: AppSpacing.xs),
-            // Chevron / dropdown icon
+            const SizedBox(width: 4),
             Icon(
-              isExpanded ? Icons.keyboard_arrow_down : Icons.chevron_right,
-              color: isExpanded ? AppColors.maroonDeep : AppColors.charcoalMuted,
-              size: 20,
+              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              color: isExpanded ? AppColors.auraGold : AppColors.charcoalMuted,
+              size: 18,
             ),
           ],
         ),
       ),
     );
   }
-}
-
-// ─────────────────────────────────────────────
-// Triangle Pointer Painter
-// ─────────────────────────────────────────────
-
-class _TrianglePainter extends CustomPainter {
-  final Color color;
-
-  _TrianglePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    final path = Path()
-      ..moveTo(size.width / 2, 0)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

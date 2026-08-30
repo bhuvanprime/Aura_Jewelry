@@ -61,12 +61,25 @@ class CategoryItemsScreen extends StatelessWidget {
           }
 
           if (state is ProductLoaded) {
-            // Filter products by category prefix (e.g., "ring" matches "ring_1", "ring_2")
-            final categoryProducts = state.products
-                .where((p) => p.id.startsWith(categoryId))
-                .toList();
+            // Filter products by category or show all
+            final categoryProducts = state.products.where((p) {
+              if (categoryId == 'all' || categoryId.isEmpty) return true;
+              final catLower = categoryId.toLowerCase();
+              final nameLower = categoryName.toLowerCase();
+              final pCatLower = p.categoryId.toLowerCase();
+              final pNameLower = p.name.toLowerCase();
+              return pCatLower.contains(catLower) ||
+                  pCatLower.contains(nameLower) ||
+                  pNameLower.contains(catLower) ||
+                  pNameLower.contains(nameLower) ||
+                  p.id.toLowerCase().contains(catLower);
+            }).toList();
 
-            if (categoryProducts.isEmpty) {
+            final displayProducts = categoryProducts.isNotEmpty
+                ? categoryProducts
+                : (categoryId == 'all' ? state.products : categoryProducts);
+
+            if (displayProducts.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -97,7 +110,7 @@ class CategoryItemsScreen extends StatelessWidget {
                     vertical: AppSpacing.lg,
                   ),
                   child: Text(
-                    '${categoryProducts.length} ${AppStrings.results}',
+                    '${displayProducts.length} ${AppStrings.results}',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),
@@ -111,9 +124,9 @@ class CategoryItemsScreen extends StatelessWidget {
                     mainAxisSpacing: AppSpacing.gridMainAxisSpacing,
                     childAspectRatio: AppSpacing.gridChildAspectRatio,
                   ),
-                  itemCount: categoryProducts.length,
+                  itemCount: displayProducts.length,
                   itemBuilder: (context, index) {
-                    final product = categoryProducts[index];
+                    final product = displayProducts[index];
                     return ProductCard(
                       product: product,
                       onTap: () {
