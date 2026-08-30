@@ -2,9 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:aura_luxury_jewelry/core/crypto/admin_credentials.dart';
 import 'package:aura_luxury_jewelry/features/admin/domain/models/admin_category_model.dart';
 import 'package:aura_luxury_jewelry/features/admin/domain/models/offer_model.dart';
-import 'package:aura_luxury_jewelry/features/admin/domain/models/combo_model.dart';
 import 'package:aura_luxury_jewelry/features/admin/domain/models/order_model.dart';
-import 'package:aura_luxury_jewelry/features/admin/domain/models/gold_rate_model.dart';
 import 'package:aura_luxury_jewelry/features/admin/data/repositories/admin_repository_impl.dart';
 import 'package:aura_luxury_jewelry/features/auth/data/repositories/auth_repository_impl.dart';
 

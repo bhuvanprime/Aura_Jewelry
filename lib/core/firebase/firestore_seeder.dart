@@ -4,7 +4,6 @@ import 'firebase_service.dart';
 import '../../features/products/domain/models/product_model.dart';
 import '../../features/admin/domain/models/admin_category_model.dart';
 import '../../features/admin/domain/models/offer_model.dart';
-import '../../features/admin/domain/models/combo_model.dart';
 import '../../features/admin/domain/models/gold_rate_model.dart';
 
 /// Ensures Cloud Firestore in project `aurajewelry-2d68d` is populated with initial
@@ -185,13 +184,15 @@ class FirestoreSeeder {
       // 3. Seed Offers & Combos if empty
       final offSnap = await firestore.collection('offers').limit(1).get().timeout(const Duration(seconds: 2));
       if (offSnap.docs.isEmpty) {
-        final initialOffer = const OfferModel(
+        const initialOffer = OfferModel(
           id: 'off_festive_2026',
           title: 'Royal Rajwada Festive Discount',
           code: 'ROYAL2026',
-          discountPercentage: 15.0,
-          maxDiscountAmount: 25000.0,
+          discountType: 'percentage',
+          discountValue: 15.0,
+          maxDiscount: 25000.0,
           minOrderValue: 50000.0,
+          validTill: '2026-12-31',
           description: 'Get flat 15% off up to ₹25,000 on handcrafted gold & diamond heritage jewelry.',
           isActive: true,
         );
