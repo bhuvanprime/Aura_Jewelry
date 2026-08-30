@@ -6,6 +6,7 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/image_url_resolver.dart';
 import '../../../admin/domain/models/combo_model.dart';
+import '../../../cart/domain/models/cart_item_model.dart';
 import '../../../cart/bloc/cart_bloc.dart';
 import '../../../cart/bloc/cart_event.dart';
 import '../../../cart/presentation/screens/cart_screen.dart';
@@ -69,7 +70,7 @@ class ComboDetailScreen extends StatelessWidget {
               margin: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-                boxShadow: AppShadows.cardShadow,
+                boxShadow: AppShadows.whisper,
                 border: Border.all(color: AppColors.auraGold, width: 1.5),
               ),
               child: ClipRRect(
@@ -178,7 +179,7 @@ class ComboDetailScreen extends StatelessWidget {
                       color: AppColors.warmWhite,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                       border: Border.all(color: AppColors.hairlineLight),
-                      boxShadow: AppShadows.subtleShadow,
+                      boxShadow: AppShadows.soft,
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -426,7 +427,7 @@ class ComboDetailScreen extends StatelessWidget {
                 ),
                 onPressed: () {
                   final prod = combo.toProductModel();
-                  context.read<CartBloc>().add(CartItemAdded(product: prod));
+                  context.read<CartBloc>().add(CartItemAdded(CartItemModel(product: prod)));
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
