@@ -2,27 +2,24 @@
 # Exit on error
 set -o errexit
 
-echo "==> Setting up Flutter on Render environment..."
+echo "==> [Render Build] Setting up Flutter SDK..."
 
 # Download and extract stable Flutter SDK if not cached
 if [ ! -d "$HOME/flutter" ]; then
-  cd $HOME
+  cd "$HOME"
   git clone https://github.com/flutter/flutter.git -b stable --depth 1
   cd -
 fi
 
 export PATH="$HOME/flutter/bin:$PATH"
 
-echo "==> Verifying Flutter version..."
+echo "==> [Render Build] Flutter Version:"
 flutter --version
 
-echo "==> Installing Flutter dependencies..."
+echo "==> [Render Build] Fetching Flutter dependencies..."
 flutter pub get
 
-echo "==> Building optimized Flutter Web application..."
+echo "==> [Render Build] Building Release Web Application..."
 flutter build web --release --base-href="/"
 
-echo "==> Installing Node.js server dependencies..."
-npm install
-
-echo "==> Build completed successfully!"
+echo "==> [Render Build] Web build completed successfully!"
