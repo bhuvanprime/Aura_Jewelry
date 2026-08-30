@@ -59,21 +59,24 @@ class _ComboSlideshowBannerState extends State<ComboSlideshowBanner> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseService.instance.firestore.collection('combos').snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-          return _buildLoadingPlaceholder();
-        }
-
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
           return HeroBanner(
             onShopNowTap: () {},
           );
         }
 
-        final combos = snapshot.data!.docs.map((doc) {
-          final data = doc.data();
-          data['id'] = doc.id;
-          return ComboModel.fromJson(data);
-        }).where((c) => c.inStock).toList();
+        List<ComboModel> combos = [];
+        try {
+          combos = snapshot.data!.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return ComboModel.fromJson(data);
+          }).where((c) => c.inStock).toList();
+        } catch (_) {
+          return HeroBanner(
+            onShopNowTap: () {},
+          );
+        }
 
         if (combos.isEmpty) {
           return HeroBanner(
