@@ -7,9 +7,10 @@ import '../../../../core/utils/image_url_resolver.dart';
 import '../../../../core/firebase/firebase_service.dart';
 import '../../../admin/domain/models/combo_model.dart';
 import '../screens/combo_detail_screen.dart';
+import 'hero_banner.dart';
 
 /// Pure Cloud Firestore real-time slideshow banner for Curated Bridal Combos & Sets.
-/// Zero hardcoded data - all combos are streamed live from project `aurajewelry-2d68d`.
+/// Falls back to static royal HeroBanner if no combos are available.
 class ComboSlideshowBanner extends StatefulWidget {
   const ComboSlideshowBanner({super.key});
 
@@ -63,7 +64,9 @@ class _ComboSlideshowBannerState extends State<ComboSlideshowBanner> {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const SizedBox.shrink();
+          return HeroBanner(
+            onShopNowTap: () {},
+          );
         }
 
         final combos = snapshot.data!.docs.map((doc) {
@@ -73,7 +76,9 @@ class _ComboSlideshowBannerState extends State<ComboSlideshowBanner> {
         }).where((c) => c.inStock).toList();
 
         if (combos.isEmpty) {
-          return const SizedBox.shrink();
+          return HeroBanner(
+            onShopNowTap: () {},
+          );
         }
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
