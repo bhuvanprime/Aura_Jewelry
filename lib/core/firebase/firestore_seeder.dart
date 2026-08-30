@@ -241,6 +241,23 @@ class FirestoreSeeder {
             inStock: true,
             stockCount: 6,
           ),
+          const ComboModel(
+            id: 'combo_nizam_3',
+            title: 'Nizam Heritage Polki & Bangle Set',
+            description: 'Antique 22K temple-engraved bridal kada with heirloom Polki necklace studded with rubies.',
+            originalPrice: 327000,
+            comboPrice: 289000,
+            discountPercent: 11.6,
+            includedProductIds: ['prod_1', 'prod_4'],
+            includedProductNames: [
+              'Nizam Antique Choker (48.5g)',
+              'Kada Rajwada Engraved Bangles Pair (72.8g)',
+            ],
+            imageUrl: 'https://images.unsplash.com/photo-1599643478524-fb66f7ca066d?auto=format&fit=crop&w=800&q=80',
+            tag: '💎 Nizam Heritage',
+            inStock: true,
+            stockCount: 3,
+          ),
         ];
 
         for (final cm in initialCombos) {

@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/image_url_resolver.dart';
 import '../../../../core/firebase/firebase_service.dart';
 import '../../../admin/domain/models/combo_model.dart';
 import '../screens/combo_detail_screen.dart';
 
+/// Pure Cloud Firestore real-time slideshow banner for Curated Bridal Combos & Sets.
+/// Zero hardcoded data - all combos are streamed live from project `aurajewelry-2d68d`.
 class ComboSlideshowBanner extends StatefulWidget {
   const ComboSlideshowBanner({super.key});
 
@@ -19,75 +21,22 @@ class _ComboSlideshowBannerState extends State<ComboSlideshowBanner> {
   final PageController _pageController = PageController();
   Timer? _autoSlideTimer;
   int _currentPage = 0;
-
-  final List<ComboModel> _defaultCombos = const [
-    ComboModel(
-      id: 'combo_bridal_1',
-      title: 'Maharani Kundan Bridal Ensemble',
-      description: 'Opulent 4-piece 22K gold wedding set featuring layered choker, matching jhumkas, maang tikka, and antique kada.',
-      originalPrice: 385000,
-      comboPrice: 345000,
-      discountPercent: 10.4,
-      includedProductIds: ['prod_1', 'prod_2', 'prod_4', 'prod_5'],
-      includedProductNames: [
-        'Nizam Heritage Polki Choker (48.5g)',
-        'Mayur Jhumka Chandbalis (16.2g)',
-        'Padmavati Floral Maang Tikka (12.0g)',
-        'Rajwada Antique Kada Bangle (36.4g)',
-      ],
-      imageUrl: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=800&q=80',
-      tag: '👑 Royal Bridal Set',
-      inStock: true,
-      stockCount: 4,
-    ),
-    ComboModel(
-      id: 'combo_festive_2',
-      title: 'Padmavati Heritage Solitaire Trio',
-      description: 'Handcrafted 18K yellow gold cocktail ring, matching diamond studs, and tennis bracelet.',
-      originalPrice: 198000,
-      comboPrice: 175000,
-      discountPercent: 11.6,
-      includedProductIds: ['prod_3', 'prod_2'],
-      includedProductNames: [
-        'Padmavati Solitaire VVS1 Ring (6.8g)',
-        'Brilliant Cut Diamond Studs (8.5g)',
-        'Solid Gold Tennis Bracelet (18.2g)',
-      ],
-      imageUrl: 'https://images.unsplash.com/photo-1605100804763-247f67b2548e?auto=format&fit=crop&w=800&q=80',
-      tag: '✨ Festive Trio',
-      inStock: true,
-      stockCount: 6,
-    ),
-    ComboModel(
-      id: 'combo_nizam_3',
-      title: 'Nizam Heritage Polki & Bangle Set',
-      description: 'Antique 22K temple-engraved bridal kada with heirloom Polki necklace studded with rubies.',
-      originalPrice: 327000,
-      comboPrice: 289000,
-      discountPercent: 11.6,
-      includedProductIds: ['prod_1', 'prod_4'],
-      includedProductNames: [
-        'Nizam Antique Choker (48.5g)',
-        'Kada Rajwada Engraved Bangles Pair (72.8g)',
-      ],
-      imageUrl: 'https://images.unsplash.com/photo-1599643478524-fb66f7ca066d?auto=format&fit=crop&w=800&q=80',
-      tag: '💎 Nizam Heritage',
-      inStock: true,
-      stockCount: 3,
-    ),
-  ];
+  int _totalCombos = 0;
 
   @override
-  void initState() {
-    super.initState();
-    _startAutoSlide();
+  void dispose() {
+    _autoSlideTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
   }
 
-  void _startAutoSlide() {
+  void _resetTimer(int count) {
+    if (count <= 1 || count == _totalCombos) return;
+    _totalCombos = count;
     _autoSlideTimer?.cancel();
     _autoSlideTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_pageController.hasClients) {
-        final nextPage = (_currentPage + 1) % _defaultCombos.length;
+      if (_pageController.hasClients && _totalCombos > 1) {
+        final nextPage = (_currentPage + 1) % _totalCombos;
         _pageController.animateToPage(
           nextPage,
           duration: const Duration(milliseconds: 600),
@@ -95,13 +44,6 @@ class _ComboSlideshowBannerState extends State<ComboSlideshowBanner> {
         );
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _autoSlideTimer?.cancel();
-    _pageController.dispose();
-    super.dispose();
   }
 
   void _navigateToCombo(ComboModel combo) {
@@ -113,23 +55,30 @@ class _ComboSlideshowBannerState extends State<ComboSlideshowBanner> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseService.instance.firestore.collection('combos').snapshots(),
       builder: (context, snapshot) {
-        List<ComboModel> combos = _defaultCombos;
-        if (snapshot.hasData && snapshot.data != null && snapshot.data!.docs.isNotEmpty) {
-          try {
-            combos = snapshot.data!.docs.map((doc) {
-              final data = doc.data();
-              data['id'] = doc.id;
-              return ComboModel.fromJson(data);
-            }).toList();
-          } catch (_) {
-            combos = _defaultCombos;
-          }
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+          return _buildLoadingPlaceholder();
         }
 
-        if (combos.isEmpty) combos = _defaultCombos;
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final combos = snapshot.data!.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return ComboModel.fromJson(data);
+        }).where((c) => c.inStock).toList();
+
+        if (combos.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _resetTimer(combos.length);
+        });
 
         return Column(
           children: [
@@ -151,25 +100,41 @@ class _ComboSlideshowBannerState extends State<ComboSlideshowBanner> {
               ),
             ),
             // Page Indicator Dots
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(combos.length, (index) {
-                final isSelected = _currentPage == index;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  height: 6,
-                  width: isSelected ? 22 : 6,
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.maroonDeep : AppColors.auraGoldLight.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                );
-              }),
-            ),
+            if (combos.length > 1)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(combos.length, (index) {
+                  final isSelected = _currentPage == index;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    height: 6,
+                    width: isSelected ? 22 : 6,
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.maroonDeep : AppColors.auraGoldLight.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  );
+                }),
+              ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildLoadingPlaceholder() {
+    return Container(
+      height: 240,
+      margin: const EdgeInsets.fromLTRB(18, 16, 18, 8),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.hairlineLight),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(color: AppColors.maroonDeep),
+      ),
     );
   }
 
@@ -197,7 +162,7 @@ class _ComboSlideshowBannerState extends State<ComboSlideshowBanner> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Background Image
+              // Background Image from Firestore
               Image.network(
                 resolvedUrl,
                 fit: BoxFit.cover,
