@@ -4,7 +4,7 @@
   "description": "Aura Luxury Jewelry - Web Application",
   "main": "server.js",
   "scripts": {
-    "build": "chmod +x render-build.sh && ./render-build.sh",
+    "build": "node build.js",
     "start": "node server.js"
   },
   "engines": {
