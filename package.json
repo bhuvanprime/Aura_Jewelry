@@ -1,0 +1,16 @@
+{
+  "name": "aura-luxury-jewelry",
+  "version": "1.0.0",
+  "description": "Aura Luxury Jewelry - Web App",
+  "main": "server.js",
+  "scripts": {
+    "build": "chmod +x render-build.sh && ./render-build.sh",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
