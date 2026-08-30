@@ -13,6 +13,12 @@ class UserModel extends Equatable {
     this.isGuest = false,
   });
 
+  String get id => uid;
+  String get email => emailOrPhone;
+  String get name => emailOrPhone.contains('@')
+      ? emailOrPhone.split('@').first
+      : (emailOrPhone.isNotEmpty ? emailOrPhone : 'Patron');
+
   factory UserModel.guest() {
     return const UserModel(
       uid: 'guest_uid',

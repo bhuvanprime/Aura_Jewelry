@@ -65,7 +65,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               }
 
               return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: _firestore.collection('users').doc(user.id).collection('addresses').snapshots(),
+                stream: _firestore.collection('users').doc(user.uid).collection('addresses').snapshots(),
                 builder: (context, addressSnapshot) {
                   final docs = addressSnapshot.data?.docs ?? [];
                   final addresses = docs.map((d) {
@@ -445,25 +445,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() => _isPlacingOrder = true);
 
     try {
-      final orderId = 'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}';
+      final orderId = 'ord_${DateTime.now().millisecondsSinceEpoch}';
+      final orderNumber = 'AUR-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
       final order = OrderModel(
         id: orderId,
-        customerName: user.name.isNotEmpty ? user.name : 'Royal Patron',
-        customerEmail: user.email,
+        orderNumber: orderNumber,
+        customerName: user.name.toString().isNotEmpty ? user.name.toString() : 'Royal Patron',
+        customerEmail: user.email.toString(),
         customerPhone: _selectedAddress!.phoneNumber,
         shippingAddress: _selectedAddress!.formattedAddress,
         items: cart.items
             .map((i) => OrderItemModel(
                   productId: i.product.id,
                   productName: i.product.name,
+                  imageUrl: i.product.imageUrl,
+                  unitPrice: i.product.price,
                   quantity: i.quantity,
-                  price: i.product.price,
                   size: i.selectedSize ?? 'Standard',
+                  karat: i.product.karat,
+                  grossWeightGrams: i.product.grossWeightGrams,
                 ))
             .toList(),
-        totalAmount: cart.total,
+        subtotal: cart.subtotal,
         discountAmount: 0,
-        status: OrderLifecycleStatus.placed,
+        taxAmount: 0,
+        totalAmount: cart.total,
+        status: OrderLifecycleStatus.pending,
+        paymentMethod: _paymentMethod,
+        paymentStatus: _paymentMethod == 'COD' ? 'Pending' : 'Paid',
         orderDate: DateTime.now(),
       );
 
@@ -471,7 +480,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       await _firestore.collection('orders').doc(order.id).set(order.toJson());
       await _firestore
           .collection('users')
-          .doc(user.id)
+          .doc(user.uid.toString())
           .collection('orders')
           .doc(order.id)
           .set(order.toJson());

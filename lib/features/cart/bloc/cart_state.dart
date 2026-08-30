@@ -6,7 +6,8 @@ class CartState extends Equatable {
   
   const CartState({this.items = const []});
 
-  double get subtotal => items.fold(0, (total, item) => total + item.totalPrice);
+  int get itemCount => items.fold(0, (total, item) => total + item.quantity);
+  double get subtotal => items.fold(0.0, (total, item) => total + item.totalPrice);
   double get shipping => subtotal > 0 ? 50.0 : 0.0; // Flat $50 shipping if not empty
   double get total => subtotal + shipping;
 
